@@ -1,0 +1,167 @@
+#rule{
+	position: absolute;
+	left: 65pt;
+	border-right-color:#f09999;
+	border-right-style:solid;
+	border-right-width:2px;
+	height:100%;
+	top: 0px;
+	z-index: 2;
+}
+#header {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 65pt;
+	background-color: white;
+	z-index: 1;
+	botder: none;
+	width: 100%;
+}
+#header h1 {
+	padding-left: 90pt;
+}
+
+.body_contents{
+	margin-top: 75pt;
+}
+
+#bagel_body {
+	position: absolute;
+	top: 0pt;
+	left: 0pt;
+	width: 100%;
+	height: 100%;
+	display:flex;
+}
+
+#game_panel {
+	display:flex;
+	flex-flow: column;
+}
+
+#side_bar {
+	padding-left: 68pt;
+	width: 160pt;
+	border-right: 1px solid gray;
+	margin-right: 10px;
+	float: left;
+}
+
+#game_list {
+	margin-top: 0px;
+}
+
+#game_panel {
+	float:left;
+	margin-right:10px;
+}
+
+#turn_indicator {
+	text-align: center;
+}
+
+.guess_list {
+	float:left;
+	width: 80px;
+	margin:2px;
+	padding:2px;
+	height:100%;
+}
+
+#guess_lists {
+	width: 210px;
+	height:100%;
+}
+
+#go_button {
+	margin-top: 13px;
+	margin-bottom: 5px;
+	width: 40pt;
+}
+
+#login_button {
+	margin-top: 13px;
+	margin-bottom: 5px;
+	height: 22px;
+	width:40%;
+}
+#create_user_button {
+	height: 22px;
+	width:40%;
+}
+
+input {
+	height: 22px;
+}
+
+#start_button {
+	margin-top:8px;
+}
+
+#left_guesses {
+	border-right: 1px solid;
+}
+
+#right_guesses {
+	border-left: 1px solid;
+	padding-left: 10px;
+}
+
+#scratch_panel {
+	display: flex;
+	flex-flow: row;
+	flex: 1 1 auto;
+}
+
+#scratch_border {
+	display: flex;
+	flex-flow: row;
+	flex: 0 0 auto;
+	width: 20px;
+}
+
+#scratch_panel textarea {
+	background: rgba(255, 255, 255, .7);
+	width: 100%;
+	margin-top: 10px;
+	border: 1px solid gray;
+	padding-left: 10px;
+	z-index: 2;
+}
+
+#game_list li:hover {
+	font-weight: bold;
+}
+
+ul, div, textarea, input {
+	font-family: 'Chilanka', cursive;
+}
+
+.field_label {
+	font-family: 'Handlee', cursive;
+}
+
+
+h1 {
+	font-family: 'Permanent Marker', cursive;
+	font-size: 38pt;
+}
+
+input{
+	width: 92pt;
+	background:none;
+}
+
+div, h5, span {
+	line-height: 34px;
+}
+
+h5 {
+	margin:0;
+}
+
+body{
+  background-image: url(bgline.png);
+  background-repeat:repeat;
+}
