@@ -143,7 +143,11 @@ class GamePanel extends React.Component {
 			let guessBox = null
 			let guessLists = null
 			if (this.props.game.opponent != null) {
-				turnText = this.props.game.turn + "'s turn"
+				if (this.props.game.winner != null) {
+					turnText = this.props.game.winner + " WON!!"
+				} else {
+					turnText = this.props.game.turn + "'s turn"
+				}
 				guessBox = <GuessBox onGuess={this.props.onGuess}/>
 				guessLists = <GuessLists game={this.props.game}/>
 			}
@@ -278,24 +282,35 @@ class ScratchPanel extends React.Component {
 		super(props)
 		this.saveText = this.saveText.bind(this)
 
-		this.contents = "scratch space"
+		let contents = "scratch space"
 		if (this.props.game != null) {
-			const contents = localStorage.getItem("SCRATCH_" + this.props.game.game_id)
-			if (contents) {
-				this.contents = contents
+			const stored_contents = localStorage.getItem("SCRATCH_" + this.props.game.game_id)
+			if (stored_contents) {
+				contents = stored_contents
 			}
+		}
+		this.state = {
+			contents: contents
 		}
 	}
 
 	saveText(e) {
+		this.setState({contents: e.target.value})
 		if (this.props.game != null) 
 			localStorage.setItem("SCRATCH_" + this.props.game.game_id, e.target.value)
 	}
 
 	render() {
+		let contents = this.state.contents;
+		if (this.props.game != null) {
+			const stored_contents = localStorage.getItem("SCRATCH_" + this.props.game.game_id)
+			if (stored_contents) {
+				contents = stored_contents
+			}
+		}
 		return (
 			<div id="scratch_panel" className ="body_contents">
-				<textarea defaultValue={this.contents} onChange={this.saveText} />
+				<textarea value={contents} onChange={this.saveText} />
 			</div>
 			)
 	}
