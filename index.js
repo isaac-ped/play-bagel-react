@@ -16,7 +16,7 @@ class FieldEntry extends React.Component {
 	render() {
 		let input = null;
 		if ( "onChange" in this.props && ((!"mutable" in this.props) || this.props.mutable)) {
-			input = <input type="text" name={this.props.name} value={this.props.default_value} onChange={this.onChange}/>
+			input = <input type="text" name={this.props.name} defaultValue={this.props.default_value} onChange={this.onChange}/>
 		}
 		 else {
 			input =  <input type="text" name={this.props.name} value={this.props.default_value} readOnly/>
@@ -45,7 +45,7 @@ class GuessList extends React.Component {
 
 	render() {
 		let guesses = null
-		if ('guesses' in this.props)
+		if ('guesses' in this.props && this.props.guesses != undefined)
 			guesses = this.props.guesses.map((guess, i) => 
 				<Guess word={guess.guess} number={guess.number} key={i} />
 			)
@@ -62,11 +62,16 @@ class GuessList extends React.Component {
 
 class GuessLists extends React.Component {
 	render() {
+		const opponent = 'opponent' in this.props.game ? this.props.game.opponent : ""
 		console.log("Game: ", this.props.game)
 		return (
 			<div id="guess_lists"> 
-				<GuessList id="left_guesses" guesses={this.props.game.user_guesses} player="You"/>
-				<GuessList id="right_guesses" guesses={this.props.game.other_guesses} player={this.props.game.opponent}/>
+				<GuessList id="left_guesses" 
+							guesses={this.props.game.your_guesses}
+							player="You"/>
+				<GuessList id="right_guesses"
+							guesses={this.props.game.other_guesses}
+							player={opponent}/>
 			</div>
 		)
 	}
@@ -88,7 +93,9 @@ class GuessBox extends React.Component {
 	}
 
 	do_guess(e) {
-		this.props.do_guess(this.state.guess)
+		if (this.state.guess.length == 5) {
+			this.props.onGuess(this.state.guess)
+		}
 	}
 
 	render() {
@@ -98,7 +105,7 @@ class GuessBox extends React.Component {
 				<input type="text" name="guess_box" defaultValue={this.state.guess}
 				       onChange={this.set_guess} />
 				<input id="go_button" type="submit" value="GO"
-					   onClick={this.do_guess}/>
+					   onClick={this.do_guess} disabled={this.state.guess.length != 5}/>
 			</div>
 		)
 	}
@@ -113,58 +120,52 @@ class GamePanel extends React.Component {
 			game_id: this.props.game.game_id,
 			your_word: this.props.game.your_word
 		}
-		this.set_game_id = this.set_game_id.bind(this)
-		this.set_your_word = this.set_your_word.bind(this)
-		this.refresh = this.refresh.bind(this)
+		this.setGameId = this.setGameId.bind(this)
+		this.setYourWord = this.setYourWord.bind(this)
+		this.joinGame = this.joinGame.bind(this)
 	}
 
-	refresh() {
-		console.log("Refreshing")
-		if ('game' in this.props) {
-			this.props.refresh_game({name: this.props.game.game_id})
-		}
-	}
-
-	componentDidMount() {
-		console.log("Mounted")
-		this.timerID = setInterval(
-			() => this.refresh(),
-			15000
-		);
-	}
-
-	componentWillUnmount() {
-		console.log("Unmounting");
-		clearInterval(this.timerID);
-	}
-
-	set_game_id(game_id) {
+	setGameId(game_id) {
 		this.setState({game_id: game_id})
 	}
-	set_your_word(word) {
-		this.setState({yor_word: word})
+	setYourWord(word) {
+		this.setState({your_word: word})
+	}
+
+	joinGame(){
+		this.props.onJoinGame(this.state.game_id, this.state.your_word);
 	}
 
 	render() {
-		if (this.props.in_progress) {
+		console.log("New", this.props.newGame)
+		if (!this.props.newGame) {
+			let turnText = "waiting for opponent"
+			let guessBox = null
+			let guessLists = null
+			if (this.props.game.opponent != null) {
+				turnText = this.props.game.turn + "'s turn"
+				guessBox = <GuessBox onGuess={this.props.onGuess}/>
+				guessLists = <GuessLists game={this.props.game}/>
+			}
 			return (
 				<div id="game_panel" className="body_contents">
 					<FieldEntry label="Game" default_value={this.props.game.game_id}/>
 					<FieldEntry label="Your Word" default_value={this.props.game.your_word}/>
-					<span className="field_label" id="turn_indicator"> {this.props.game.turn}'s turn</span>
-					<GuessBox do_guess={this.props.do_guess}/>
-					<GuessLists game={this.props.game}/>
+					<span className="field_label" id="turn_indicator"> {turnText}</span>
+					{guessBox}
+					{guessLists}
 				</div>
 			)
 		} else {
+			const join =<input id="start_button" type="submit" value="start/join"
+						onClick={this.joinGame}/> 
 			return (
 				<div id="game_panel" className="body_contents">
-					<FieldEntry label="Game" default_value={this.props.game.game_id}
-						onChange={this.set_game_id}/>
-					<FieldEntry label="Your Word" default_value="farts"
-						onChange={this.set_your_word}/>
-					<input id="start_button" type="submit" value="start/join"
-						onClick={this.props.join_game(this.state.game_id, this.state.word)}/> 
+					<FieldEntry label="Game" default_value={this.state.game_id}
+						onChange={this.setGameId} mutable={true}/>
+					<FieldEntry label="Your Word" default_value={this.state.your_word}
+						onChange={this.setYourWord} mutable={true}/>
+					{join}
 				</div>
 			)
 		}
@@ -184,7 +185,7 @@ class GameLi extends React.Component{
 	}
 
 	render() {
-		return <li onClick={this.selectGame}> {this.props.game.name} </li>
+		return <li onClick={this.selectGame}> {this.props.game.game_id} </li>
 	}
 
 }
@@ -197,7 +198,7 @@ class GamesList extends React.Component {
 
 	render() {
 		const games_li = this.props.games.map((game) => 
-			<GameLi key={game.name} game={game} onSelection={this.props.onSelection} />)
+			<GameLi key={game.game_id} game={game} onSelection={this.props.onSelection} />)
 		return (
 			<div>
 				<FieldLabel label="Games" />
@@ -214,6 +215,9 @@ const ENDPOINT="https://vjk7ehax6l.execute-api.us-east-1.amazonaws.com/default/w
 
 function make_request(action, req_str) {
 	return fetch(ENDPOINT + `?action=${action}&${req_str}`)
+			.then(result => result.json())
+			.catch((err) => 
+				console.log("Error " + err + " interpreting json from " + action))
 }
 
 function login_request(user, passwd) {
@@ -239,119 +243,31 @@ function request_guess_word(game_id, user, user_id, word) {
 
 class SideBar extends React.Component {
 
-	constructor(props) {
-		super(props);
-		this.state = {
-			logged_in: false,
-			games: [],
-			error: null,
-			password: "Passwd",
-			username: "Your Name"
-		}
-		this.do_create_user = this.do_create_user.bind(this);
-		this.do_log_in = this.do_log_in.bind(this);
-		this.do_set_user = this.do_set_user.bind(this);
-		this.do_set_password =this.do_set_password.bind(this);
-
-	}
-
-	do_set_user(val) {
-		this.setState({username:val})
-	}
-
-	do_set_password(val) {
-		this.setState({password:val})
-	}
-
-	do_create_user() {
-		this.setState({logged_in:true, games:[]})
-	}
-
-	do_log_in() {
-		login_request(this.state.username, this.state.password)
-			.then(res => res.json())
-			.then(
-				(result) => {
-					if (result.valid) {
-						this.setState({
-							error:null,
-							user_id: result.user_id
-						})
-						this.props.set_user(result)
-						return get_game_list_request(this.state.username, result.user_id)
-					} else {
-						this.setState({
-							error:result.err,
-							user_id: -1
-						})
-					}
-				},
-				(error) => {
-					this.setState({
-						logged_in:false,
-						error:error
-					})
-				}
-			)
-			.then((result) => result.json())
-			.then((result) => {
-				console.log("game list", result)
-				if (result === undefined) {
-					return
-				}
-				if (result.valid) {
-					this.setState({
-						logged_in: true,
-						error: null,
-						games: result.games
-					})
-				} else {
-						this.setState({
-							error:result.err,
-							user_id: -1
-						})
-						return {valid: false}
-				}},
-				(error) => {
-					console.log(error)
-					this.setState({
-						logged_in: false,
-						error: error.message
-					})
-				})				
-	}
-
 	render() {
-
 		let games_list = null;
-		if (this.state.logged_in) {
+		if (this.props.loggedIn) {
 			games_list = (
 				<GamesList 
-					games={this.state.games}
+					games={this.props.games}
 					onSelection={this.props.onGameSelection} 
 					onNewGame={this.props.onNewGame} />
 			)
 		}
-		let error = null;
-		if (this.state.error != null) {
-			error = <span id="error"> ERROR! {this.state.error} </span>
-		}
 
 		return  (
 			<div id="side_bar" className="body_contents">
-				<FieldEntry label="Name" default_value={this.state.username}
-					onChange={this.do_set_user}
-					mutable={!this.state.logged_in}/>
-				<FieldEntry label="Password" default_value={this.state.password} 
-					onChange={this.do_set_password}
-					mutable={!this.state.logged_in}/>
+				<FieldEntry label="Name" default_value={this.props.username}
+					onChange={this.props.onUserChange}
+					mutable={!this.props.loggedIn}/>
+				<FieldEntry label="Password" default_value={this.props.password} 
+					onChange={this.props.onPasswordChange}
+					mutable={!this.props.loggedIn}/>
 				<input id="create_user_button" type="submit" value="Create User"
-					onClick={this.do_create_user} disabled={this.state.logged_in}
+					onClick={this.props.onCreateUser} disabled={this.props.loggedIn}
 				/>
 				<input id="login_button" type="submit" value="Log(ish) In"
-					onClick={this.do_log_in} />
+					onClick={this.props.onLogin} />
 				{games_list}
-				{error}
 			</div>
 		)
 	}
@@ -370,32 +286,92 @@ class ScratchPanel extends React.Component {
 class BagelBody extends React.Component {
 	constructor(props) {
 		super(props)
-		this.state = {activeGame: null,
+		this.state = {activeGameId: null,
+					  gameList: [],
 					  newGame: false,
-					  user: null,
-					  user_id: -1}
-		this.setUser = this.setUser.bind(this)
+					  username: null,
+					  password: null,
+					  error: null,
+					  userId: -1}
+		this.setUsername = this.setUsername.bind(this)
 		this.setGame = this.setGame.bind(this);
 		this.setNewGame = this.setNewGame.bind(this);
 		this.joinGame = this.joinGame.bind(this);
 		this.doGuess = this.doGuess.bind(this)
+		this.setGameList = this.setGameList.bind(this)
+		this.getActiveGame = this.getActiveGame.bind(this)
+		this.setPassword = this.setPassword.bind(this)
+		this.logIn = this.logIn.bind(this)
+	}
+
+	clearError() {
+	}
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  componentDidMount() {
+    this.timerID = setInterval(
+      () => this.refresh(),
+      15000
+    );
+  }
+
+  	refresh() {
+		get_game_list_request(this.state.username, this.state.userId)
+		 	.then((res) => {
+				if (res.valid) {
+					this.setGameList(res['games'])
+					this.setState({
+						activeGame: this.getActiveGame(res['games'], this.state.activeGameId)
+					})
+				} else {
+					console.log(res)
+				}
+			}, (error) => {
+				console.log("ERROR in joinGame:" + error)
+			})
+	}
+
+	errorHandler(err) {
+		console.log(err)
+	}
+
+	setGameList(games) {
+		let activeGame = null;
+		if (this.state.activeGameId) {
+			activeGame = this.getActiveGame(games, this.state.activeGameId)
+		}
+		this.setState({gameList: games, activeGame: activeGame})
+
 	}
 
 	setGame(game) {
-		console.log('game is', game)
-		get_game(game['name'], this.state.user, this.state.user_id)
-			.then(res => res.json())
-			.then((res) => {
-				console.log("game dtails", res)
-				this.setState({activeGame: res})
-			},(error) => {
-				console.log("ERROR in setGame:" + error)
-			}
-			)
+		this.setState({activeGameId: game['game_id'],
+					   activeGame: game,
+					  newGame: false})
+		// this.getActiveGame()
 	}
 
-	setUser(user) {
-		this.setState({user: user['user_name'], user_id:user['user_id']})
+	getActiveGame(game_list, game_id) {
+		const active = game_list.filter(game => game.game_id == game_id)
+		if (active.length != 1) {
+			return null;
+		}
+		return active[0]
+	}
+
+	setUsername(username) {
+		this.setState({username: username})
+	}
+
+	setUserId(user_id) {
+		this.setState({userId: user_id})
+	}
+
+	setPassword(password) {
+		this.setState({password: password})
 	}
 
 	setNewGame() {
@@ -403,25 +379,47 @@ class BagelBody extends React.Component {
 	}
 
 	joinGame(game_id, word) {
-		request_join_game(game_id, this.state.user, this.state.user_id, word)
-			.then(res => res.json())
+		console.log("JOINING GAME" + game_id, this.state.username, this.state.userId)
+		request_join_game(game_id, this.state.username, this.state.userId, word)
 			.then((res) => {
-				this.setState({activeGame: res})
+				if (res.valid) {
+					this.setGameList(res['games'])
+					this.setGame(this.getActiveGame(res['games'], game_id))
+				} else {
+					console.log(res)
+				}
 			}, (error) => {
 				console.log("ERROR in joinGame:" + error)
 			})
 	}
 
-	doGuess(guess) {
-		console.log("GUESSSSGGIN", guess)
-		request_guess_word(this.state.activeGame.game_id,
-						   this.state.user,
-						   this.state.user_id,
-						   guess)
-			.then(res => res.json())
+	logIn() {
+		login_request(this.state.username, this.state.password)
 			.then((res) => {
 				if (res.valid) {
-					this.setState({activeGame: res})
+					this.setUserId(res['user_id'])
+					this.refresh()
+				} else {
+					console.log(res)
+				}
+
+			}, (error) => {
+				console.log("Error in login: " + error)
+			})
+	}
+
+	createUser() {
+
+	}
+
+	doGuess(guess) {
+		request_guess_word(this.state.activeGame.game_id,
+						   this.state.username,
+						   this.state.userId,
+						   guess)
+			.then((res) => {
+				if (res.valid) {
+					this.setGameList(res['games'])
 				} else {
 					console.log("ERROR in doGuess1", res)
 				}
@@ -434,24 +432,33 @@ class BagelBody extends React.Component {
 
 		let gamePanel = null
 		let scratchPad = null
-		if (this.state.activeGame != null) {
+		if (this.state.activeGame != null ) {
 			gamePanel = <GamePanel game={this.state.activeGame}
-			   	 				   in_progress={true}
-			   	 				   do_guess={this.doGuess}
-			   	 				   refresh_game={this.setGame}
+			   	 				   onGuess={this.doGuess}
+			   	 				   refreshGame={this.refresh}
+			   	 				   newGame={this.state.newGame}
 			   	 				   />
 			scratchPad = <ScratchPanel/>
 		} else if (this.state.newGame) {
 			const new_game = {game_id: ""}
-			gamePanel = <GamePanel game={new_game} in_progress={false}
-								   join_game={this.joinGame} />
+			gamePanel = <GamePanel game={new_game}
+								   onJoinGame={this.joinGame}
+								   refreshGame={false}
+								   newGame={this.state.newGame}/>
 		}
 
 		return (
 			<div id="bagel_body">
-				<SideBar onGameSelection={this.setGame} 
+				<SideBar loggedIn={this.state.userId != -1}
+						 games={this.state.gameList}
+						 onGameSelection={this.setGame} 
 						 onNewGame={this.setNewGame} 
-						 set_user={this.setUser} />
+						 username={this.state.username}
+						 onUserChange={this.setUsername}
+						 password={this.state.password}
+						 onPasswordChange={this.setPassword}
+						 onCreateUser={this.createUser}
+						 onLogin={this.logIn}/>
 				{gamePanel} {scratchPad}
 				<div id="scratch_border"> </div>
 			</div>
