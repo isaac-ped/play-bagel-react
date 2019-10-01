@@ -319,19 +319,21 @@ class BagelBody extends React.Component {
   }
 
   	refresh() {
-		get_game_list_request(this.state.username, this.state.userId)
-		 	.then((res) => {
-				if (res.valid) {
-					this.setGameList(res['games'])
-					this.setState({
-						activeGame: this.getActiveGame(res['games'], this.state.activeGameId)
-					})
-				} else {
-					console.log(res)
-				}
-			}, (error) => {
-				console.log("ERROR in joinGame:" + error)
-			})
+  		if (this.state.userId > 0) {
+			get_game_list_request(this.state.username, this.state.userId)
+			 	.then((res) => {
+					if (res.valid) {
+						this.setGameList(res['games'])
+						this.setState({
+							activeGame: this.getActiveGame(res['games'], this.state.activeGameId)
+						})
+					} else {
+						console.log(res)
+					}
+				}, (error) => {
+					console.log("ERROR in joinGame:" + error)
+				})
+		}
 	}
 
 	errorHandler(err) {
