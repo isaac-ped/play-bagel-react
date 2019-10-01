@@ -142,9 +142,14 @@ class GamePanel extends React.Component {
 			let turnText = "waiting for opponent"
 			let guessBox = null
 			let guessLists = null
+			let delGame = null
 			if (this.props.game.opponent != null) {
 				if (this.props.game.winner != null) {
 					turnText = this.props.game.winner + " WON!!"
+					if (this.props.game.winner == this.props.game.opponent) {
+						delGame = <input id="del_button" type="submit" value="End Game"
+						  		   onClick={this.props.onDeleteGame} />
+			  		}
 				} else {
 					turnText = this.props.game.turn + "'s turn"
 				}
@@ -156,6 +161,7 @@ class GamePanel extends React.Component {
 					<FieldEntry label="Game" default_value={this.props.game.game_id}/>
 					<FieldEntry label="Your Word" default_value={this.props.game.your_word}/>
 					<span className="field_label" id="turn_indicator"> {turnText}</span>
+					{delGame}
 					{guessBox}
 					{guessLists}
 				</div>
@@ -238,6 +244,10 @@ function get_game(game_id, user, user_id) {
 
 function request_join_game(game_id, user, user_id, word) {
 	return make_request("join_game", `user=${user}&user_id=${user_id}&game_id=${game_id}&word=${word}`)
+}
+
+function request_delete_game(game_id, user, user_id) {
+	return make_request("delete_game", `user=${user}&user_id=${user_id}&game_id=${game_id}`)
 }
 
 function request_guess_word(game_id, user, user_id, word) {
@@ -339,6 +349,7 @@ class BagelBody extends React.Component {
 		this.getActiveGame = this.getActiveGame.bind(this)
 		this.setPassword = this.setPassword.bind(this)
 		this.logIn = this.logIn.bind(this)
+		this.deleteGame = this.deleteGame.bind(this)
 
 	}
 
@@ -450,6 +461,20 @@ class BagelBody extends React.Component {
 			})
 	}
 
+	deleteGame() {
+		request_delete_game(this.state.activeGame.game_id, this.state.username, this.state.userId)
+			.then((res) => {
+				if (res.valid) {
+					this.setNewGame()
+					this.setGameList(res['games'])
+				} else {
+					console.log("Error in reqeuest delete game", res)
+				}
+			}, (error) => {
+				console.log("Error in rdg", error)
+			})
+	}
+
 	createUser() {
 
 	}
@@ -479,6 +504,7 @@ class BagelBody extends React.Component {
 			   	 				   onGuess={this.doGuess}
 			   	 				   refreshGame={this.refresh}
 			   	 				   newGame={this.state.newGame}
+			   	 				   onDeleteGame={this.deleteGame}
 			   	 				   />
 			scratchPad = <ScratchPanel game={this.state.activeGame}/>
 		} else if (this.state.newGame) {

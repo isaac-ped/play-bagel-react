@@ -74,6 +74,12 @@
 	height:100%;
 }
 
+
+#del_button {
+	margin-top: 13px;
+	margin-bottom: 5px;
+}
+
 #go_button {
 	margin-top: 13px;
 	margin-bottom: 5px;
