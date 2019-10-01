@@ -89,7 +89,8 @@ class GuessBox extends React.Component {
 	}
 
 	set_guess(e) {
-		this.setState({guess: e.target.value})
+
+		this.setState({guess: e.target.value.trim().toLowerCase()})
 	}
 
 	do_guess(e) {
@@ -126,10 +127,11 @@ class GamePanel extends React.Component {
 	}
 
 	setGameId(game_id) {
+		game_id = game_id.trim()
 		this.setState({game_id: game_id})
 	}
 	setYourWord(word) {
-		this.setState({your_word: word})
+		this.setState({your_word: word.toLowerCase()})
 	}
 
 	joinGame(){
@@ -438,6 +440,7 @@ class BagelBody extends React.Component {
 					this.setGame(this.getActiveGame(res['games'], game_id))
 				} else {
 					console.log(res)
+					this.setState({activeGame: null, activeGameId: null})
 				}
 			}, (error) => {
 				console.log("ERROR in joinGame:" + error)
@@ -483,7 +486,7 @@ class BagelBody extends React.Component {
 		request_guess_word(this.state.activeGame.game_id,
 						   this.state.username,
 						   this.state.userId,
-						   guess)
+						   guess.toLowerCase().trim())
 			.then((res) => {
 				if (res.valid) {
 					this.setGameList(res['games'])
