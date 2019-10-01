@@ -274,10 +274,28 @@ class SideBar extends React.Component {
 }
 
 class ScratchPanel extends React.Component {
+	constructor(props) {
+		super(props)
+		this.saveText = this.saveText.bind(this)
+
+		this.contents = "scratch space"
+		if (this.props.game != null) {
+			const contents = localStorage.getItem("SCRATCH_" + this.props.game.game_id)
+			if (contents) {
+				this.contents = contents
+			}
+		}
+	}
+
+	saveText(e) {
+		if (this.props.game != null) 
+			localStorage.setItem("SCRATCH_" + this.props.game.game_id, e.target.value)
+	}
+
 	render() {
 		return (
 			<div id="scratch_panel" className ="body_contents">
-				<textarea defaultValue="scratch space" />
+				<textarea defaultValue={this.contents} onChange={this.saveText} />
 			</div>
 			)
 	}
@@ -286,11 +304,15 @@ class ScratchPanel extends React.Component {
 class BagelBody extends React.Component {
 	constructor(props) {
 		super(props)
+
+		const username = localStorage.getItem('username')
+		const password = localStorage.getItem('password')
+
 		this.state = {activeGameId: null,
 					  gameList: [],
 					  newGame: false,
-					  username: null,
-					  password: null,
+					  username: username,
+					  password: password,
 					  error: null,
 					  userId: -1}
 		this.setUsername = this.setUsername.bind(this)
@@ -302,6 +324,7 @@ class BagelBody extends React.Component {
 		this.getActiveGame = this.getActiveGame.bind(this)
 		this.setPassword = this.setPassword.bind(this)
 		this.logIn = this.logIn.bind(this)
+
 	}
 
 	clearError() {
@@ -396,6 +419,8 @@ class BagelBody extends React.Component {
 	}
 
 	logIn() {
+		localStorage.setItem('username', this.state.username)
+		localStorage.setItem('password', this.state.password)
 		login_request(this.state.username, this.state.password)
 			.then((res) => {
 				if (res.valid) {
@@ -440,7 +465,7 @@ class BagelBody extends React.Component {
 			   	 				   refreshGame={this.refresh}
 			   	 				   newGame={this.state.newGame}
 			   	 				   />
-			scratchPad = <ScratchPanel/>
+			scratchPad = <ScratchPanel game={this.state.activeGame}/>
 		} else if (this.state.newGame) {
 			const new_game = {game_id: ""}
 			gamePanel = <GamePanel game={new_game}
