@@ -15,10 +15,16 @@ class FieldEntry extends React.Component {
 
 	render() {
 		let input = null;
-		if ( "onChange" in this.props && ((!"mutable" in this.props) || this.props.mutable)) {
-			input = <input type="text" name={this.props.name} defaultValue={this.props.default_value} onChange={this.onChange}/>
+		let mutable = true;
+		if ('mutable' in this.props) {
+			mutable = this.props.mutable
+		}
+		if ( "onChange" in this.props) {
+			input = <input type="text" name={this.props.name} value={this.props.default_value} onChange={this.onChange}
+			 		 readOnly={!mutable}/>
 		}
 		 else {
+		 	console.log("Uncontrolled")
 			input =  <input type="text" name={this.props.name} value={this.props.default_value} readOnly/>
 		}
 
@@ -118,7 +124,6 @@ class GamePanel extends React.Component {
 	constructor(props) {
 		super(props)
 		this.state = {
-			game_id: this.props.game.game_id,
 			your_word: this.props.game.your_word
 		}
 		this.setGameId = this.setGameId.bind(this)
@@ -128,14 +133,14 @@ class GamePanel extends React.Component {
 
 	setGameId(game_id) {
 		game_id = game_id.trim()
-		this.setState({game_id: game_id})
+		this.props.onGameIdChange(game_id)
 	}
 	setYourWord(word) {
 		this.setState({your_word: word.toLowerCase()})
 	}
 
 	joinGame(){
-		this.props.onJoinGame(this.state.game_id, this.state.your_word);
+		this.props.onJoinGame(this.props.gameId, this.state.your_word);
 	}
 
 	render() {
@@ -157,11 +162,16 @@ class GamePanel extends React.Component {
 				}
 				guessBox = <GuessBox onGuess={this.props.onGuess}/>
 				guessLists = <GuessLists game={this.props.game}/>
+			} else {
+				delGame = <input id="del_button" type="submit" value="Delete Game"
+						  		   onClick={this.props.onDeleteGame} />
 			}
 			return (
 				<div id="game_panel" className="body_contents">
-					<FieldEntry label="Game" default_value={this.props.game.game_id}/>
-					<FieldEntry label="Your Word" default_value={this.props.game.your_word}/>
+					<FieldEntry label="Game" default_value={this.props.game.game_id}
+						onChange={this.setGameId} mutable={false}/>
+					<FieldEntry label="Your Word" default_value={this.props.game.your_word}
+					    onChange={this.setYourWord} mutable={false}/>
 					<span className="field_label" id="turn_indicator"> {turnText}</span>
 					{delGame}
 					{guessBox}
@@ -171,9 +181,10 @@ class GamePanel extends React.Component {
 		} else {
 			const join =<input id="start_button" type="submit" value="start/join"
 						onClick={this.joinGame}/> 
+			console.log("NEW GAME ID: ", this.props.gameId)
 			return (
 				<div id="game_panel" className="body_contents">
-					<FieldEntry label="Game" default_value={this.state.game_id}
+					<FieldEntry label="Game" default_value={this.props.gameId}
 						onChange={this.setGameId} mutable={true}/>
 					<FieldEntry label="Your Word" default_value={this.state.your_word}
 						onChange={this.setYourWord} mutable={true}/>
@@ -391,8 +402,7 @@ class BagelBody extends React.Component {
 					  password: password,
 					  error: null,
 					  userId: -1,
-					  joinableGames: [],
-					  newGameId: ""}
+					  joinableGames: []}
 		this.setUsername = this.setUsername.bind(this)
 		this.setGame = this.setGame.bind(this);
 		this.setNewGame = this.setNewGame.bind(this);
@@ -406,6 +416,7 @@ class BagelBody extends React.Component {
 		this.errorHandler = this.errorHandler.bind(this)
 		this.clearError = this.clearError.bind(this)
 		this.createUser = this.createUser.bind(this)
+		this.setGameId = this.setGameId.bind(this)
 
 	}
 
@@ -493,8 +504,7 @@ class BagelBody extends React.Component {
 	}
 
 	setNewGame(newGameId) {
-		console.log('ngid', newGameId)
-		this.setState({activeGame: null, newGame: true, newGameId: newGameId})
+		this.setState({activeGame: null, newGame: true, activeGameId: newGameId})
 	}
 
 	joinGame(game_id, word) {
@@ -609,10 +619,12 @@ class BagelBody extends React.Component {
 			   	 				   />
 			scratchPad = <ScratchPanel game={this.state.activeGame}/>
 		} else if (this.state.newGame) {
-			gamePanel = <GamePanel game={{game_id: this.state.newGameId}}
+			gamePanel = <GamePanel game={{game_id: this.state.activeGameId}}
 								   onJoinGame={this.joinGame}
 								   refreshGame={false}
-								   newGame={this.state.newGame}/>
+								   newGame={this.state.newGame}
+						 		   onGameIdChange={this.setGameId}
+						 		   gameId={this.state.activeGameId}/>
 		}
 
 		return (
@@ -628,7 +640,8 @@ class BagelBody extends React.Component {
 						 onPasswordChange={this.setPassword}
 						 onCreateUser={this.createUser}
 						 onLogin={this.logIn}
-						 joinableGames={this.state.joinableGames}/>
+						 joinableGames={this.state.joinableGames}
+						 onGameIdChange={this.setGameId}/>
 				{gamePanel} {scratchPad}
 				<div id="scratch_border"> </div>
 			</div>
