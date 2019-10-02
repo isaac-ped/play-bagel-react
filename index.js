@@ -197,7 +197,9 @@ class GameLi extends React.Component{
 	}
 
 	render() {
-		return <li onClick={this.selectGame}> {this.props.game.game_id} </li>
+		const is_turn = 'opponent' in this.props.game && this.props.game.opponent != this.props.game.turn
+
+		return <li onClick={this.selectGame}> {is_turn ? "***" : ""} {this.props.game.game_id} </li>
 	}
 
 }
