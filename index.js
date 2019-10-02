@@ -208,6 +208,11 @@ class GamesList extends React.Component {
 
 	constructor(props) {
 		super(props)
+		this.onNew = this.onNew.bind(this)
+	}
+
+	onNew(e) {
+		this.props.onNewGame("")
 	}
 
 	render() {
@@ -218,12 +223,39 @@ class GamesList extends React.Component {
 				<FieldLabel label="Games" />
 				<ul id="game_list">
 					{games_li}
-					<li onClick={this.props.onNewGame} > New Game </li>
+					<li onClick={this.onNew} > New Game </li>
 				</ul>
 			</div>
 		)
 	}
 }
+
+class JoinableGamesList extends React.Component {
+
+	constructor(props) {
+		super(props)
+		this.onNew = this.onNew.bind(this)
+	}
+
+	onNew(label) {
+		this.props.onNewGame(label)
+	}
+
+	render() {
+		const games_li = this.props.games.map((game) => 
+			<li key={game} onClick={() => {this.onNew(game)}}> {game} </li>
+		)
+		return (
+			<div>
+				<FieldLabel label="Joinable Games" />
+				<ul id="game_list">
+					{games_li}
+				</ul>
+			</div>
+		)
+	}
+}
+
 
 const ENDPOINT="https://vjk7ehax6l.execute-api.us-east-1.amazonaws.com/default/word-entry-microservice"
 
@@ -240,6 +272,10 @@ function login_request(user, passwd) {
 
 function get_game_list_request(user, user_id) {
 	return make_request("list_games", `user=${user}&user_id=${user_id}`)
+}
+
+function get_empty_games_request(user, user_id) {
+	return make_request("get_unjoined_games", `user=${user}&user_id=${user_id}`)
 }
 
 function get_game(game_id, user, user_id) {
@@ -263,6 +299,7 @@ class SideBar extends React.Component {
 
 	render() {
 		let games_list = null;
+		let to_join_list = null;
 		if (this.props.loggedIn) {
 			games_list = (
 				<GamesList 
@@ -270,6 +307,10 @@ class SideBar extends React.Component {
 					onSelection={this.props.onGameSelection} 
 					onNewGame={this.props.onNewGame} />
 			)
+			to_join_list = (
+				<JoinableGamesList
+					onNewGame={this.props.onNewGame}
+					games={this.props.joinableGames} />)
 		}
 
 		return  (
@@ -286,6 +327,7 @@ class SideBar extends React.Component {
 				<input id="login_button" type="submit" value="Log(ish) In"
 					onClick={this.props.onLogin} />
 				{games_list}
+				{to_join_list}
 			</div>
 		)
 	}
@@ -343,7 +385,9 @@ class BagelBody extends React.Component {
 					  username: username,
 					  password: password,
 					  error: null,
-					  userId: -1}
+					  userId: -1,
+					  joinableGames: [],
+					  newGameId: ""}
 		this.setUsername = this.setUsername.bind(this)
 		this.setGame = this.setGame.bind(this);
 		this.setNewGame = this.setNewGame.bind(this);
@@ -382,7 +426,8 @@ class BagelBody extends React.Component {
 					if (res.valid) {
 						this.setGameList(res['games'])
 						this.setState({
-							activeGame: this.getActiveGame(res['games'], this.state.activeGameId)
+							activeGame: this.getActiveGame(res['games'], this.state.activeGameId),
+							joinableGames: res['joinable_games']
 						})
 						this.clearError()
 					} else {
@@ -408,6 +453,10 @@ class BagelBody extends React.Component {
 		}
 		this.setState({gameList: games, activeGame: activeGame})
 
+	}
+
+	setGameId(game_id) {
+		this.setState({activeGameId: game_id})
 	}
 
 	setGame(game) {
@@ -437,8 +486,9 @@ class BagelBody extends React.Component {
 		this.setState({password: password})
 	}
 
-	setNewGame() {
-		this.setState({activeGame: null, newGame: true})
+	setNewGame(newGameId) {
+		console.log('ngid', newGameId)
+		this.setState({activeGame: null, newGame: true, newGameId: newGameId})
 	}
 
 	joinGame(game_id, word) {
@@ -484,7 +534,7 @@ class BagelBody extends React.Component {
 		request_delete_game(this.state.activeGame.game_id, this.state.username, this.state.userId)
 			.then((res) => {
 				if (res.valid) {
-					this.setNewGame()
+					this.setNewGame("")
 					this.setGameList(res['games'])
 					this.clearError()
 				} else {
@@ -537,8 +587,7 @@ class BagelBody extends React.Component {
 			   	 				   />
 			scratchPad = <ScratchPanel game={this.state.activeGame}/>
 		} else if (this.state.newGame) {
-			const new_game = {game_id: ""}
-			gamePanel = <GamePanel game={new_game}
+			gamePanel = <GamePanel game={{game_id: this.state.newGameId}}
 								   onJoinGame={this.joinGame}
 								   refreshGame={false}
 								   newGame={this.state.newGame}/>
@@ -556,7 +605,8 @@ class BagelBody extends React.Component {
 						 password={this.state.password}
 						 onPasswordChange={this.setPassword}
 						 onCreateUser={this.createUser}
-						 onLogin={this.logIn}/>
+						 onLogin={this.logIn}
+						 joinableGames={this.state.joinableGames}/>
 				{gamePanel} {scratchPad}
 				<div id="scratch_border"> </div>
 			</div>
