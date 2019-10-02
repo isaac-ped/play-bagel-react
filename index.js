@@ -352,10 +352,14 @@ class BagelBody extends React.Component {
 		this.setPassword = this.setPassword.bind(this)
 		this.logIn = this.logIn.bind(this)
 		this.deleteGame = this.deleteGame.bind(this)
+		this.errorHandler = this.errorHandler.bind(this)
+		this.clearError = this.clearError.bind(this)
 
 	}
 
 	clearError() {
+		console.log("Clearing error")
+		this.setState({error: null})
 	}
 
   componentWillUnmount() {
@@ -378,17 +382,21 @@ class BagelBody extends React.Component {
 						this.setState({
 							activeGame: this.getActiveGame(res['games'], this.state.activeGameId)
 						})
+						this.clearError()
 					} else {
 						console.log(res)
+						this.errorHandler(res.err)
 					}
 				}, (error) => {
+					this.errorHandler(error)
 					console.log("ERROR in joinGame:" + error)
 				})
 		}
 	}
 
 	errorHandler(err) {
-		console.log(err)
+		console.log("ERROR", err, err.toString())
+		this.setState({error: err.toString()})
 	}
 
 	setGameList(games) {
@@ -438,11 +446,14 @@ class BagelBody extends React.Component {
 				if (res.valid) {
 					this.setGameList(res['games'])
 					this.setGame(this.getActiveGame(res['games'], game_id))
+					this.clearError()
 				} else {
 					console.log(res)
+					this.errorHandler(res.err)
 					this.setState({activeGame: null, activeGameId: null})
 				}
 			}, (error) => {
+				this.errorHandler(error)
 				console.log("ERROR in joinGame:" + error)
 			})
 	}
@@ -455,11 +466,14 @@ class BagelBody extends React.Component {
 				if (res.valid) {
 					this.setUserId(res['user_id'])
 					this.refresh()
+					this.clearError()
 				} else {
+					this.errorHandler(res.err)
 					console.log(res)
 				}
 
 			}, (error) => {
+				this.errorHandler(error)
 				console.log("Error in login: " + error)
 			})
 	}
@@ -470,10 +484,12 @@ class BagelBody extends React.Component {
 				if (res.valid) {
 					this.setNewGame()
 					this.setGameList(res['games'])
+					this.clearError()
 				} else {
 					console.log("Error in reqeuest delete game", res)
 				}
 			}, (error) => {
+				this.errorHandler(err)
 				console.log("Error in rdg", error)
 			})
 	}
@@ -490,10 +506,14 @@ class BagelBody extends React.Component {
 			.then((res) => {
 				if (res.valid) {
 					this.setGameList(res['games'])
+					this.clearError()
 				} else {
 					console.log("ERROR in doGuess1", res)
+
+					this.errorHandler(res.err)
 				}
 			}, (error) => {
+				this.errorHandler(error)
 				console.log("ERROR in doGuess2: " + error)
 			})
 	}
@@ -502,6 +522,10 @@ class BagelBody extends React.Component {
 
 		let gamePanel = null
 		let scratchPad = null
+		let errorMsg = null
+		if (this.state.error != null) {
+			errorMsg = <span id="error_msg"> {this.state.error} </span>
+		}
 		if (this.state.activeGame != null ) {
 			gamePanel = <GamePanel game={this.state.activeGame}
 			   	 				   onGuess={this.doGuess}
@@ -520,6 +544,7 @@ class BagelBody extends React.Component {
 
 		return (
 			<div id="bagel_body">
+				{errorMsg}
 				<SideBar loggedIn={this.state.userId != -1}
 						 games={this.state.gameList}
 						 onGameSelection={this.setGame} 

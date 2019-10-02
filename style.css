@@ -26,6 +26,15 @@
 	margin-top: 75pt;
 }
 
+#error_msg {
+	position: absolute;
+	top: 25pt;
+	left: 80pt;
+	color: red;
+	font-size: 50pt;
+	z-index: 5;
+}
+
 #bagel_body {
 	position: absolute;
 	top: 0pt;
