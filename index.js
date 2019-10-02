@@ -292,6 +292,11 @@ function request_delete_game(game_id, user, user_id) {
 
 function request_guess_word(game_id, user, user_id, word) {
 	return make_request("guess_word", `user=${user}&user_id=${user_id}&game_id=${game_id}&word=${word}`)
+}
+
+function request_create_user(user, passwd) {
+	const secret = window.prompt("What are the initials of the person who created this?", "");
+	return make_request("create_user", `user=${user}&passwd=${passwd}&secret=${secret}`)
 
 }
 
@@ -400,6 +405,7 @@ class BagelBody extends React.Component {
 		this.deleteGame = this.deleteGame.bind(this)
 		this.errorHandler = this.errorHandler.bind(this)
 		this.clearError = this.clearError.bind(this)
+		this.createUser = this.createUser.bind(this)
 
 	}
 
@@ -547,7 +553,23 @@ class BagelBody extends React.Component {
 	}
 
 	createUser() {
+		request_create_user(this.state.username, this.state.userId)
+			.then((res) => {
+				if (res.valid) {
+					localStorage.setItem('username', this.state.username)
+					localStorage.setItem('password', this.state.password)
+					this.setUserId(res['user_id'])
+					this.refresh()
+					this.clearError()
+				} else {
+					console.log(res)
+					this.errorHandler(res.err)
+				}
 
+			}, (error) => {
+				this.errorHandler(error)
+				console.log("Error in login: " + error)
+			})
 	}
 
 	doGuess(guess) {
