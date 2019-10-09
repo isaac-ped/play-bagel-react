@@ -153,10 +153,8 @@ class GamePanel extends React.Component {
 			if (this.props.game.opponent != null) {
 				if (this.props.game.winner != null) {
 					turnText = this.props.game.winner + " WON!!"
-					if (this.props.game.winner == this.props.game.opponent) {
-						delGame = <input id="del_button" type="submit" value="End Game"
-						  		   onClick={this.props.onDeleteGame} />
-			  		}
+                    delGame = <input id="del_button" type="submit" value="End Game"
+                               onClick={this.props.onDeleteGame} />
 				} else {
 					turnText = this.props.game.turn + "'s turn"
 				}
