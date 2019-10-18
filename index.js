@@ -498,6 +498,7 @@ class BagelBody extends React.Component {
 	}
 
 	setPassword(password) {
+        console.log("Setting password to ", password);
 		this.setState({password: password})
 	}
 
@@ -561,7 +562,7 @@ class BagelBody extends React.Component {
 	}
 
 	createUser() {
-		request_create_user(this.state.username, this.state.userId)
+		request_create_user(this.state.username, this.state.password)
 			.then((res) => {
 				if (res.valid) {
 					localStorage.setItem('username', this.state.username)
